@@ -11,7 +11,8 @@ function getCasesDataFromInput()
         $nbActivities = intval(readline());
         for ($a = 0; $a < $nbActivities; $a++) {
             $times = explode(" ", readline());
-            $casesData[$i][$a] = ["start" => $times[0], "end" => $times[1], "origin" => $a];
+            $hash = hash("md5", "$times[0] $times[1]");
+            $casesData[$i][$a] = ["start" => $times[0], "end" => $times[1], "hash" => $hash];
         }
     }
     return $casesData;
@@ -41,30 +42,27 @@ function cmpByTime($a, $b) {
     return 0;
 }
 
-function cmpOrigin($a, $b) {
-    return $a["origin"] - $b["origin"];
-}
-
 function solve($case) {
+    $originalOrder = $case;
     usort($case, "cmpByTime");
+    $solvedResult = [];
     $endingJ = 0;
     $endingC = 0;
     for ($act = 0; $act < count($case); $act++) {
+        $hash = hash("md5", $case[$act]["start"]. " " . $case[$act]["end"]);
         if ($case[$act]["start"] >= $endingC) {
             $endingC = $case[$act]["end"];
-            $case[$act]["who"] = "C";
+            $solvedResult[$hash] = ["who" => "C"];
         } elseif ($case[$act]["start"] >= $endingJ) {
             $endingJ = $case[$act]["end"];
-            $case[$act]["who"] = "J";
+            $solvedResult[$hash] = ["who" => "J"];
         } else {
             return "IMPOSSIBLE";
         }
     }
-
     $output = "";
-    usort($case, "cmpOrigin");
-    for ($act = 0; $act < count($case); $act++) {
-        $output .= $case[$act]["who"];
+    foreach ($originalOrder as $key => $value) {
+        $output .= $solvedResult[$value["hash"]]["who"];
     }
     return $output;
 }
